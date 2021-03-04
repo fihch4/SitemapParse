@@ -1,6 +1,7 @@
 #!/usr/bin/python3.8
 
 import mysql.connector
+from config import *
 
 class MySQLi:
     _connection = None
@@ -27,17 +28,22 @@ class MySQLi:
         return cursor
 
     def fetch(self, sql, *args):
-        result = {"rows": [], "num_rows": 0}
+        # result = {"rows": [], "num_rows": 0}
+        result = {"rows": []}
         cursor = self._query(sql, args)
         if cursor != None:
             if cursor.with_rows:
                 rows = cursor.fetchall()
                 result["rows"] = rows
-                result["num_rows"] = cursor.rowcount
+                # result["num_rows"] = cursor.rowcount
             cursor.close()
         return result
 
     def commit(self, sql, *args):
+        """
+
+        :rtype: object
+        """
         num_rows = 0
         cursor = self._query(sql, args)
         if cursor != None:
@@ -49,3 +55,4 @@ class MySQLi:
     def __del__(self):
         if self._connection != None and self._connection.is_connected():
             self._connection.close()
+#
