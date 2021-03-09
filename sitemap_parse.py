@@ -79,9 +79,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # date = datetime.datetime.utcnow().date()
-    # url = 'https://www.alco-help.ru/lechenie-alkogolizma/plusy-i-minusy-stacionarnogo-lechenija-alkogolnoj-zavi'
-    # check_string_in_db = db.fetch("select url FROM a_team_sitemaps WHERE url= %s AND datetime = %s", url, date)
-    # print(check_string_in_db['rows'])
     main()
 #
