@@ -62,23 +62,26 @@ def main():
     date = datetime.datetime.utcnow().date()
     dom_sitemaps = get_sitemaps(sitemap_url)
     sitemaps = get_list_sitemaps(dom_sitemaps)
-    print(dom_sitemaps)
+    for_domain_id = db.fetch("SELECT id FROM a_team_webmaster_domains WHERE domain LIKE %s", ("%" + host_db + "%"))
+    domain_id = for_domain_id['rows'][0][0]
+
     if sitemaps is not None:
         list = list_urls(sitemaps)
         for url in list:
             check_string_in_db = db.fetch("select url FROM a_team_sitemaps WHERE url= %s AND datetime = %s", url, date)
             if not check_string_in_db['rows']:
                 print(f"URL - {url} - Переменная rows {check_string_in_db['rows']} - ! Записали в БД")
-                db.commit("INSERT INTO a_team_sitemaps (host, url, datetime) VALUES (%s, %s, %s)", host_db, url, date)
+                db.commit("INSERT INTO a_team_sitemaps (host, url, datetime, id_domain) VALUES (%s, %s, %s, %s)",
+                          host_db, url, date, domain_id)
     else:
         list = list_urls_from_one_sitemap(dom_sitemaps)
         for url in list:
             check_string_in_db = db.fetch("select url FROM a_team_sitemaps WHERE url= %s AND datetime = %s", url, date)
             if not check_string_in_db['rows']:
                 print(f"URL - {url} - Переменная rows {check_string_in_db['rows']} - ! Записали в БД")
-                db.commit("INSERT INTO a_team_sitemaps (host, url, datetime) VALUES (%s, %s, %s)", host_db, url, date)
+                db.commit("INSERT INTO a_team_sitemaps (host, url, datetime, id_domain) VALUES (%s, %s, %s, %s)",
+                          host_db, url, date, domain_id)
 
 
 if __name__ == '__main__':
     main()
-#
