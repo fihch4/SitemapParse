@@ -1,16 +1,17 @@
 #!/usr/bin/python3.8
 from bs4 import BeautifulSoup
 import time
-import re
 import requests
-import urllib3
 
 import datetime
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from config import *
 from apache_mysql import MySQLi
+
 db = MySQLi(host, user, password, database_home)
+
 
 def get_sitemaps(sitemap_url):
     try:
@@ -60,6 +61,16 @@ def list_urls_from_one_sitemap(sitemap):
 
 def main():
     date = datetime.datetime.utcnow().date()
+    check_string_in_db = db.fetch("select url FROM "
+                                  "a_team_sitemaps WHERE datetime = %s AND id_domain = %s", date, domain_id_conf)
+    list_check = []
+    if len(check_string_in_db['rows']) >= 1:
+        for i in check_string_in_db['rows']:
+            list_check.append(f"{i[0]}")
+
+    in_db = 0
+    not_in_db = 0
+
     dom_sitemaps = get_sitemaps(sitemap_url)
     sitemaps = get_list_sitemaps(dom_sitemaps)
     for_domain_id = db.fetch("SELECT id FROM a_team_webmaster_domains WHERE domain LIKE %s", ("%" + host_db + "%"))
@@ -68,19 +79,25 @@ def main():
     if sitemaps is not None:
         list = list_urls(sitemaps)
         for url in list:
-            check_string_in_db = db.fetch("select url FROM a_team_sitemaps WHERE url= %s AND datetime = %s", url, date)
-            if not check_string_in_db['rows']:
-                print(f"URL - {url} - Переменная rows {check_string_in_db['rows']} - ! Записали в БД")
+            if url in list_check:
+                in_db += 1
+            else:
+                not_in_db += 1
                 db.commit("INSERT INTO a_team_sitemaps (host, url, datetime, id_domain) VALUES (%s, %s, %s, %s)",
                           host_db, url, date, domain_id)
     else:
         list = list_urls_from_one_sitemap(dom_sitemaps)
         for url in list:
-            check_string_in_db = db.fetch("select url FROM a_team_sitemaps WHERE url= %s AND datetime = %s", url, date)
-            if not check_string_in_db['rows']:
-                print(f"URL - {url} - Переменная rows {check_string_in_db['rows']} - ! Записали в БД")
+            if url in list_check:
+                in_db += 1
+            else:
+                not_in_db += 1
                 db.commit("INSERT INTO a_team_sitemaps (host, url, datetime, id_domain) VALUES (%s, %s, %s, %s)",
                           host_db, url, date, domain_id)
+
+    print("Закончили обработку")
+    print(f"В базе данных: {in_db}")
+    print(f"Отсутствует в БД: {not_in_db}")
 
 
 if __name__ == '__main__':
